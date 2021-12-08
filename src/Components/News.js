@@ -2,37 +2,34 @@ import React, { Component } from 'react'
 import NewsItems from './NewsItems'
 import noimage from '../noImage.jpg'
 import Spinner from './Spinner';
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export class News extends Component {
 
-      constructor(){
-          super();
+      constructor(props){
+          super(props);
           this.state = {
               articles:[],
-              loading:false,
+              loading:true,
               page:1,
               totalResults:0
           }
+          document.title = `NewsTimes - ${this.props.category}`
       }
 
       componentDidMount() {
         this.controlState(this.state.page);
       }
 
-      handlePreviousClick = ()=> {
-        this.controlState(this.state.page - 1);
-      }
-
-      handleNextClick = ()=> {
+      fetchMoreData = () => {
         this.controlState(this.state.page + 1);
       }
 
       async controlState(pageNo) {
-        let url=`https://newsapi.org/v2/top-headlines?country=IN&category=${this.props.category}&apiKey=13d89fb7606f44bbaef472734e085c3f&pagesize=${this.props.pageSize}&Page=${pageNo}`;
-        this.setState({loading:true});
+        const url=`https://newsapi.org/v2/top-headlines?country=IN&category=${this.props.category}&apiKey=${this.props.apiKey}&pagesize=${this.props.pageSize}&Page=${pageNo}`;
         let data = await (await fetch(url)).json();
         this.setState({
-            articles:data.articles,
+            articles: this.state.articles.concat(data.articles),
             page:pageNo,
             totalResults:data.totalResults,
             loading:false
@@ -41,22 +38,26 @@ export class News extends Component {
 
     render() {
         return (
-            <div className="container my-3">
-                <h2 className="text-center">NewsTimes - Top headlines</h2>
+            <div style={{marginTop:'60px'}}>
+            <h2 className="text-center">NewsTimes - Top {this.props.category} Headlines</h2>
                 {this.state.loading && <Spinner/>}
-                {!this.state.loading && <div className="row my-3">
-                    {this.state.articles.map((elements)=>{
-                        return <div className="col-md-4" key={elements.url}>
-                                    <NewsItems title={elements.title} description={elements.description}
-                                        imageURL={elements.urlToImage?elements.urlToImage:noimage} newsURL={elements.url}
-                                        author={elements.author} date={elements.publishedAt} source={elements.source.name}/>
-                                </div>
-                    })}
-                </div>}
-                <div className="container d-flex justify-content-between">
-                    <button type="button" disabled={this.state.page<=1} className="btn btn-dark" onClick={this.handlePreviousClick}>&larr; Previous</button>
-                    <button type="button" disabled={this.state.page>=Math.ceil(this.state.totalResults/this.props.pageSize)} className="btn btn-dark" onClick={this.handleNextClick}>Next &rarr;</button>
-                </div>
+                <InfiniteScroll
+                    dataLength={this.state.articles.length}
+                    next={this.fetchMoreData}
+                    hasMore={this.state.articles.length!==this.state.totalResults}
+                    loader={<Spinner/>}>
+                        <div className="container">
+                            <div className="row my-3">
+                                {this.state.articles.map((elements)=>{
+                                    return <div className="col-md-4" key={elements.url}>
+                                                <NewsItems title={elements.title} description={elements.description}
+                                                    imageURL={elements.urlToImage?elements.urlToImage:noimage} newsURL={elements.url}
+                                                    author={elements.author} date={elements.publishedAt} source={elements.source.name}/>
+                                            </div>
+                                })}
+                            </div>
+                        </div>
+                </InfiniteScroll>
             </div>
         )
     }

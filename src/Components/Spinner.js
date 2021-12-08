@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 export class Spinner extends Component {
     render() {
         return (
-                <div className="text-center">
+                <div className="text-center my-3">
                     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100" height="100">
                         <defs>
                             <filter id="shadow">
