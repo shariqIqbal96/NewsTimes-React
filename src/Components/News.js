@@ -26,7 +26,7 @@ export default function News(props) {
         let data = await (await fetch(url)).json();
         setArticles(articles.concat(data.articles));
         setPage(pageNo);
-        setTotalResults(data.totalResult);
+        setTotalResults(data.totalResults);
         setLoading(false);
       }
 
