@@ -1,66 +1,56 @@
-import React, { Component } from 'react'
+import React, { useState,useEffect } from 'react'
 import NewsItems from './NewsItems'
 import noimage from '../noImage.jpg'
 import Spinner from './Spinner';
 import InfiniteScroll from "react-infinite-scroll-component";
 
-export class News extends Component {
+export default function News(props) {
 
-      constructor(props){
-          super(props);
-          this.state = {
-              articles:[],
-              loading:true,
-              page:1,
-              totalResults:0
-          }
-          document.title = `NewsTimes - ${this.props.category}`
+    const [articles, setArticles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
+    document.title = `NewsTimes - ${props.category}`
+
+    //similar to componentDidMount in class based react app
+    useEffect(() => { 
+        controlState(page)
+    },[]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+    const fetchMoreData = () => {
+        controlState(page + 1);
       }
 
-      componentDidMount() {
-        this.controlState(this.state.page);
-      }
-
-      fetchMoreData = () => {
-        this.controlState(this.state.page + 1);
-      }
-
-      async controlState(pageNo) {
-        const url=`https://newsapi.org/v2/top-headlines?country=IN&category=${this.props.category}&apiKey=${this.props.apiKey}&pagesize=${this.props.pageSize}&Page=${pageNo}`;
+    const controlState = async (pageNo) => {
+        const url=`https://newsapi.org/v2/top-headlines?country=IN&category=${props.category}&apiKey=${props.apiKey}&pagesize=${props.pageSize}&Page=${pageNo}`;
         let data = await (await fetch(url)).json();
-        this.setState({
-            articles: this.state.articles.concat(data.articles),
-            page:pageNo,
-            totalResults:data.totalResults,
-            loading:false
-        });
+        setArticles(articles.concat(data.articles));
+        setPage(pageNo);
+        setTotalResults(data.totalResult);
+        setLoading(false);
       }
 
-    render() {
-        return (
-            <div style={{marginTop:'60px'}}>
-            <h2 className="text-center">NewsTimes - Top {this.props.category} Headlines</h2>
-                {this.state.loading && <Spinner/>}
-                <InfiniteScroll
-                    dataLength={this.state.articles.length}
-                    next={this.fetchMoreData}
-                    hasMore={this.state.articles.length!==this.state.totalResults}
-                    loader={<Spinner/>}>
-                        <div className="container">
-                            <div className="row my-3">
-                                {this.state.articles.map((elements)=>{
-                                    return <div className="col-md-4" key={elements.url}>
-                                                <NewsItems title={elements.title} description={elements.description}
-                                                    imageURL={elements.urlToImage?elements.urlToImage:noimage} newsURL={elements.url}
-                                                    author={elements.author} date={elements.publishedAt} source={elements.source.name}/>
-                                            </div>
-                                })}
-                            </div>
+    return (
+        <div style={{marginTop:'60px'}}>
+        <h2 className="text-center">NewsTimes - Top {props.category} Headlines</h2>
+            {loading && <Spinner/>}
+            <InfiniteScroll
+                dataLength={articles.length}
+                next={fetchMoreData}
+                hasMore={articles.length!==totalResults}
+                loader={<Spinner/>}>
+                    <div className="container">
+                        <div className="row my-3">
+                            {articles.map((elements)=>{
+                                return <div className="col-md-4" key={elements.url}>
+                                            <NewsItems title={elements.title} description={elements.description}
+                                                imageURL={elements.urlToImage?elements.urlToImage:noimage} newsURL={elements.url}
+                                                author={elements.author} date={elements.publishedAt} source={elements.source.name}/>
+                                        </div>
+                            })}
                         </div>
-                </InfiniteScroll>
-            </div>
-        )
-    }
+                    </div>
+            </InfiniteScroll>
+        </div>
+    )
 }
-
-export default News
